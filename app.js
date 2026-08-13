@@ -92,8 +92,9 @@ function renderRitualStage(stage){
     drawArea.innerHTML=`${header}${ritualSteps("切牌")}<div class="ritual-screen"><p class="table-kicker">CUT THE DECK</p><h3>憑直覺選擇切牌位置</h3><p>點選其中一疊，牌序會從那裡重新開始。</p><div class="cut-piles"><button data-cut="0.28" aria-label="從牌堆前段切牌"><i></i><span>前段</span></button><button data-cut="0.5" aria-label="從牌堆中段切牌"><i></i><span>中段</span></button><button data-cut="0.72" aria-label="從牌堆後段切牌"><i></i><span>後段</span></button></div></div>`;
   }
   if(stage==="select"){
-    drawArea.innerHTML=`${header}${ritualSteps("選牌")}<div class="selection-head"><div><p class="table-kicker">CHOOSE YOUR CARDS</p><h3>一張一張，選出你的牌</h3></div><strong id="selected-count">0 / ${ritualPositions.length}</strong></div><p class="fan-hint">左右滑動牌扇，選中的牌會依序對應牌位。</p><div class="selected-tray" id="selected-tray">${ritualPositions.map((p,i)=>`<div><span>${i+1}</span><small>${p}</small></div>`).join("")}</div><div class="card-fan" id="card-fan" role="group" aria-label="塔羅牌扇">${ritualDeck.map((card,i)=>`<button class="fan-card" data-card-index="${i}" aria-label="選擇第 ${i+1} 張牌"><span>✦</span></button>`).join("")}</div><div class="draw-actions"><button type="button" id="finish-selection" disabled>完成抽牌，開始翻牌</button></div>`;
+    drawArea.innerHTML=`${header}${ritualSteps("選牌")}<div class="selection-head"><div><p class="table-kicker">CHOOSE YOUR CARDS</p><h3>一張一張，選出你的牌</h3></div><strong id="selected-count">0 / ${ritualPositions.length}</strong></div><p class="fan-hint">拖曳牌列、滑動觸控螢幕或使用左右按鈕；選中的牌會依序對應牌位。</p><div class="selected-tray" id="selected-tray">${ritualPositions.map((p,i)=>`<div><span>${i+1}</span><small>${p}</small></div>`).join("")}</div><div class="fan-viewport"><button type="button" class="fan-nav fan-prev" aria-label="查看前一組牌">‹</button><div class="card-fan" id="card-fan" role="group" tabindex="0" aria-label="可左右拖曳的塔羅牌扇">${ritualDeck.map((card,i)=>`<button class="fan-card" data-card-index="${i}" aria-label="選擇第 ${i+1} 張牌"><span>✦</span></button>`).join("")}</div><button type="button" class="fan-nav fan-next" aria-label="查看後一組牌">›</button></div><div class="fan-meter" aria-live="polite"><span id="fan-range">瀏覽位置 1 / ${ritualDeck.length}</span><i><b id="fan-progress"></b></i></div><div class="draw-actions"><button type="button" id="finish-selection" disabled>完成抽牌，開始翻牌</button></div>`;
     drawArea.querySelectorAll(".fan-card").forEach(button=>button.addEventListener("click",()=>chooseRitualCard(button)));
+    bindFanNavigation();
   }
   drawArea.querySelectorAll("[data-ritual]").forEach(button=>button.addEventListener("click",()=>handleRitualAction(button.dataset.ritual)));
   drawArea.querySelectorAll("[data-cut]").forEach(button=>button.addEventListener("click",()=>cutRitualDeck(Number(button.dataset.cut),button)));
@@ -128,6 +129,29 @@ function cutRitualDeck(ratio,button){
   ritualDeck=[...ritualDeck.slice(point),...ritualDeck.slice(0,point)];
   button.classList.add("chosen");haptic(22);
   setTimeout(()=>renderRitualStage("select"),520);
+}
+
+function bindFanNavigation(){
+  const fan=$("#card-fan"),previous=drawArea.querySelector(".fan-prev"),next=drawArea.querySelector(".fan-next");
+  if(!fan||!previous||!next)return;
+  let dragging=false,startX=0,startScroll=0,moved=false;
+  const page=()=>Math.max(180,fan.clientWidth*.78);
+  const update=()=>{
+    const maximum=Math.max(0,fan.scrollWidth-fan.clientWidth),ratio=maximum?fan.scrollLeft/maximum:0;
+    previous.disabled=fan.scrollLeft<=2;next.disabled=fan.scrollLeft>=maximum-2;
+    const progress=$("#fan-progress"),range=$("#fan-range");
+    if(progress)progress.style.width=`${Math.max(8,ratio*100)}%`;
+    if(range){const first=Math.min(ritualDeck.length,Math.floor(ratio*Math.max(0,ritualDeck.length-1))+1);range.textContent=`瀏覽位置 ${first} / ${ritualDeck.length}`}
+  };
+  const move=direction=>fan.scrollBy({left:direction*page(),behavior:"smooth"});
+  previous.addEventListener("click",()=>move(-1));next.addEventListener("click",()=>move(1));
+  fan.addEventListener("pointerdown",event=>{if(event.target.closest(".fan-card")?.disabled)return;dragging=true;moved=false;startX=event.clientX;startScroll=fan.scrollLeft;fan.classList.add("is-dragging");fan.setPointerCapture?.(event.pointerId)});
+  fan.addEventListener("pointermove",event=>{if(!dragging)return;const distance=event.clientX-startX;if(Math.abs(distance)>5)moved=true;fan.scrollLeft=startScroll-distance});
+  fan.addEventListener("pointerup",event=>{dragging=false;fan.classList.remove("is-dragging");fan.releasePointerCapture?.(event.pointerId)});
+  fan.addEventListener("click",event=>{if(moved){event.preventDefault();event.stopPropagation();moved=false}},true);
+  fan.addEventListener("wheel",event=>{if(Math.abs(event.deltaY)>Math.abs(event.deltaX)){event.preventDefault();fan.scrollLeft+=event.deltaY}},{passive:false});
+  fan.addEventListener("keydown",event=>{if(event.key==="ArrowLeft"){event.preventDefault();move(-1)}if(event.key==="ArrowRight"){event.preventDefault();move(1)}});
+  fan.addEventListener("scroll",update,{passive:true});window.addEventListener("resize",update,{once:true});update();
 }
 
 function chooseRitualCard(button){
