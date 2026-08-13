@@ -9,15 +9,19 @@
 ## 功能
 
 - 78 張 Rider–Waite–Smith 完整牌組
-- 一張、三張與兩種五張牌陣
+- 兩種可切換的抽牌體驗：
+  - **快速翻牌**：洗牌後直接進入翻牌
+  - **完整儀式**：理牌、互動洗牌、切牌，再從 78 張牌扇中逐張選牌
+- 9 種牌陣：一張指引、兩張對話、時間之流、身心靈、五張洞察、關係之鏡、二擇一、馬蹄鐵、凱爾特十字
 - 僅大阿爾克納、僅正位設定
 - 使用瀏覽器 `crypto.getRandomValues()` 洗牌
+- 支援滑鼠、觸控與鍵盤操作；支援裝置時提供輕微震動回饋
 - 完全靜態，沒有後端、Cookie、分析或第三方程式碼
 - 手機、平板與桌面響應式版面
 
 ## GitHub Pages 部署
 
-repository 內含 `.github/workflows/pages.yml`。推送到 `main` 後會透過 GitHub Actions 自動部署，不需建置工具或伺服器。
+repository 內含 `.github/workflows/pages.yml`。第一次部署請到 **Settings → Pages**，將 **Source** 設為 **GitHub Actions**；之後推送到 `main` 就會自動部署，不需建置工具或伺服器。
 
 也可以直接雙擊 `index.html` 在本機預覽。
 

@@ -21,9 +21,26 @@ const spreads={
   five:["目前處境","需要跨越的阻礙","可運用的資源","最適合的行動","可能的發展趨勢"],
   relationship:["你在關係中的位置","對方的狀態","你們之間的連結","需要被看見的課題","關係的發展方向"]
 };
+Object.assign(spreads,{
+  two:["目前的狀態","適合採取的回應"],
+  mindbody:["身體正在訴說的訊息","內心真正的感受","靈性與長期方向"],
+  choice:["你目前的位置","選擇 A 的助力","選擇 A 的課題","選擇 B 的助力","選擇 B 的課題"],
+  horseshoe:["過去的影響","現在的處境","正在形成的趨勢","最適合的態度","外在環境","需要留意的阻礙","可能的結果"],
+  celtic:["問題核心","交叉的挑戰","意識中的目標","深層根源","近期過去","近期未來","你的立場","外在環境","希望與恐懼","長期發展"]
+});
 const $=selector=>document.querySelector(selector);
 const shuffleButton=$("#shuffle"), tableIntro=$("#table-intro"), drawArea=$("#draw-area"), tablePanel=$("#table-panel");
 let currentDraw=[];
+let ritualDeck=[],ritualPositions=[],ritualSelected=[],ritualShuffleCount=0;
+
+function getMode(){return document.querySelector('input[name="mode"]:checked')?.value||"quick"}
+function currentQuestion(){return $("#question").value.trim()}
+function haptic(pattern=12){
+  if("vibrate" in navigator){
+    const pulses=Array.isArray(pattern)?pattern:[pattern];
+    try{navigator.vibrate(pulses)}catch(error){/* Haptics are optional. */}
+  }
+}
 
 function secureShuffle(items){
   const a=[...items];
@@ -31,14 +48,100 @@ function secureShuffle(items){
   for(let i=a.length-1;i>0;i--){const j=random[i]%(i+1);[a[i],a[j]]=[a[j],a[i]]}return a;
 }
 function startReading(){
+  if(getMode()==="ritual"){startRitual();return}
   const spread=document.querySelector('input[name="spread"]:checked').value;
   const positions=spreads[spread];
   const pool=$("#major-only").checked?cards.filter(c=>c.major):cards;
   const uprightOnly=$("#upright-only").checked;
   const directionBits=new Uint32Array(positions.length);crypto.getRandomValues(directionBits);
   currentDraw=secureShuffle(pool).slice(0,positions.length).map((card,i)=>({...card,reversed:!uprightOnly&&directionBits[i]%2===1,position:positions[i]}));
-  shuffleButton.disabled=true;tablePanel.classList.add("is-shuffling");
-  setTimeout(()=>{tablePanel.classList.remove("is-shuffling");renderDraw();shuffleButton.disabled=false;},950);
+  tableIntro.hidden=true;drawArea.classList.add("active");
+  drawArea.innerHTML=`<div class="ritual-screen quick-shuffle-screen"><p class="table-kicker">THE CARDS ARE MOVING</p><div class="ritual-deck is-mixing" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><h3>正在洗牌</h3><p>讓牌序離開原本的位置，回到你的問題。</p></div>`;
+  shuffleButton.disabled=true;tablePanel.classList.add("is-shuffling");haptic([10,35,10]);
+  setTimeout(()=>{tablePanel.classList.remove("is-shuffling");renderDraw();shuffleButton.disabled=false;},1150);
+}
+
+function startRitual(){
+  const spread=document.querySelector('input[name="spread"]:checked').value;
+  ritualPositions=spreads[spread];
+  const pool=$("#major-only").checked?cards.filter(c=>c.major):cards;
+  ritualDeck=secureShuffle(pool);
+  ritualSelected=[];ritualShuffleCount=0;
+  tableIntro.hidden=true;drawArea.classList.add("active");
+  renderRitualStage("prepare");
+  if(innerWidth<900)tablePanel.scrollIntoView({behavior:"smooth",block:"start"});
+}
+
+function ritualSteps(active){
+  const labels=["理牌","洗牌","切牌","選牌"];
+  const activeIndex=labels.indexOf(active);
+  return `<ol class="ritual-steps">${labels.map((label,i)=>`<li class="${i<activeIndex?"done":i===activeIndex?"active":""}"><span>${i<activeIndex?"✓":i+1}</span>${label}</li>`).join("")}</ol>`;
+}
+
+function renderRitualStage(stage){
+  const question=currentQuestion();
+  const header=`<div class="draw-header"><div class="question-display">${question?`「${escapeHtml(question)}」`:"你此刻需要看見的訊息"}</div><p>完整儀式 · ${ritualPositions.length} 張牌</p></div>`;
+  if(stage==="prepare"){
+    drawArea.innerHTML=`${header}${ritualSteps("理牌")}<div class="ritual-screen"><p class="table-kicker">GATHER THE DECK</p><div class="ritual-deck gathering" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i></div><h3>先把牌理回一疊</h3><p>把散亂的注意力收回來，確認問題後再開始洗牌。</p><button class="ritual-primary" data-ritual="organize">理好牌，開始洗牌</button></div>`;
+  }
+  if(stage==="shuffle"){
+    drawArea.innerHTML=`${header}${ritualSteps("洗牌")}<div class="ritual-screen"><p class="table-kicker">SHUFFLE WITH INTENTION</p><div class="ritual-deck touch-deck" id="ritual-pile" role="button" tabindex="0" aria-label="拖曳或點擊洗牌"><i></i><i></i><i></i><i></i><i></i></div><h3>左右撥動牌堆洗牌</h3><p>拖曳牌堆，或按下洗牌；至少完成三次。</p><div class="shuffle-progress" aria-label="已洗牌 ${ritualShuffleCount} 次">${[0,1,2].map(i=>`<i class="${i<ritualShuffleCount?"filled":""}"></i>`).join("")}</div><div class="ritual-actions"><button data-ritual="shuffle">撥動洗牌</button><button class="ritual-primary" data-ritual="to-cut" ${ritualShuffleCount<3?"disabled":""}>洗好了，準備切牌</button></div></div>`;
+    bindPileGesture();
+  }
+  if(stage==="cut"){
+    drawArea.innerHTML=`${header}${ritualSteps("切牌")}<div class="ritual-screen"><p class="table-kicker">CUT THE DECK</p><h3>憑直覺選擇切牌位置</h3><p>點選其中一疊，牌序會從那裡重新開始。</p><div class="cut-piles"><button data-cut="0.28" aria-label="從牌堆前段切牌"><i></i><span>前段</span></button><button data-cut="0.5" aria-label="從牌堆中段切牌"><i></i><span>中段</span></button><button data-cut="0.72" aria-label="從牌堆後段切牌"><i></i><span>後段</span></button></div></div>`;
+  }
+  if(stage==="select"){
+    drawArea.innerHTML=`${header}${ritualSteps("選牌")}<div class="selection-head"><div><p class="table-kicker">CHOOSE YOUR CARDS</p><h3>一張一張，選出你的牌</h3></div><strong id="selected-count">0 / ${ritualPositions.length}</strong></div><p class="fan-hint">左右滑動牌扇，選中的牌會依序對應牌位。</p><div class="selected-tray" id="selected-tray">${ritualPositions.map((p,i)=>`<div><span>${i+1}</span><small>${p}</small></div>`).join("")}</div><div class="card-fan" id="card-fan" role="group" aria-label="塔羅牌扇">${ritualDeck.map((card,i)=>`<button class="fan-card" data-card-index="${i}" aria-label="選擇第 ${i+1} 張牌"><span>✦</span></button>`).join("")}</div><div class="draw-actions"><button type="button" id="finish-selection" disabled>完成抽牌，開始翻牌</button></div>`;
+    drawArea.querySelectorAll(".fan-card").forEach(button=>button.addEventListener("click",()=>chooseRitualCard(button)));
+  }
+  drawArea.querySelectorAll("[data-ritual]").forEach(button=>button.addEventListener("click",()=>handleRitualAction(button.dataset.ritual)));
+  drawArea.querySelectorAll("[data-cut]").forEach(button=>button.addEventListener("click",()=>cutRitualDeck(Number(button.dataset.cut),button)));
+}
+
+function handleRitualAction(action){
+  if(action==="organize"){
+    const deck=drawArea.querySelector(".ritual-deck");deck?.classList.add("is-gathered");haptic([18,30,12]);
+    setTimeout(()=>renderRitualStage("shuffle"),650);
+  }
+  if(action==="shuffle")performRitualShuffle();
+  if(action==="to-cut"&&ritualShuffleCount>=3)renderRitualStage("cut");
+}
+
+function performRitualShuffle(){
+  ritualDeck=secureShuffle(ritualDeck);ritualShuffleCount++;haptic([8,22,8]);
+  const pile=$("#ritual-pile");pile?.classList.remove("shuffle-left","shuffle-right");
+  void pile?.offsetWidth;pile?.classList.add(ritualShuffleCount%2?"shuffle-left":"shuffle-right");
+  setTimeout(()=>renderRitualStage("shuffle"),420);
+}
+
+function bindPileGesture(){
+  const pile=$("#ritual-pile");if(!pile)return;
+  let startX=null;
+  pile.addEventListener("pointerdown",event=>{startX=event.clientX;pile.setPointerCapture?.(event.pointerId)});
+  pile.addEventListener("pointerup",event=>{if(startX!==null&&Math.abs(event.clientX-startX)>24)performRitualShuffle();startX=null});
+  pile.addEventListener("keydown",event=>{if(event.key==="Enter"||event.key===" "){event.preventDefault();performRitualShuffle()}});
+}
+
+function cutRitualDeck(ratio,button){
+  const point=Math.max(1,Math.floor(ritualDeck.length*ratio));
+  ritualDeck=[...ritualDeck.slice(point),...ritualDeck.slice(0,point)];
+  button.classList.add("chosen");haptic(22);
+  setTimeout(()=>renderRitualStage("select"),520);
+}
+
+function chooseRitualCard(button){
+  if(button.disabled||ritualSelected.length>=ritualPositions.length)return;
+  const index=Number(button.dataset.cardIndex),card=ritualDeck[index];
+  const bit=new Uint32Array(1);crypto.getRandomValues(bit);
+  const reversed=!$("#upright-only").checked&&bit[0]%2===1;
+  ritualSelected.push({...card,reversed,position:ritualPositions[ritualSelected.length]});
+  button.disabled=true;button.classList.add("selected");button.innerHTML=`<b>${ritualSelected.length}</b><span>✦</span>`;haptic(15);
+  const count=$("#selected-count");if(count)count.textContent=`${ritualSelected.length} / ${ritualPositions.length}`;
+  const tray=$("#selected-tray");const slot=tray?.children[ritualSelected.length-1];slot?.classList.add("filled");
+  if(slot)slot.querySelector("span").textContent="✦";
+  const finish=$("#finish-selection");
+  if(ritualSelected.length===ritualPositions.length){finish.disabled=false;finish.addEventListener("click",()=>{currentDraw=[...ritualSelected];renderDraw();haptic([12,25,12])},{once:true})}
 }
 function renderDraw(){
   tableIntro.hidden=true;drawArea.classList.add("active");
@@ -50,4 +153,10 @@ function renderDraw(){
 }
 function reveal(el){if(el.classList.contains("revealed"))return;el.classList.add("revealed");el.setAttribute("aria-label",`${currentDraw[+el.dataset.index].name}，${currentDraw[+el.dataset.index].reversed?"逆位":"正位"}`)}
 function escapeHtml(s){return s.replace(/[&<>'"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[ch]))}
-shuffleButton.addEventListener("click",startReading);$("#year").textContent=new Date().getFullYear();
+function updateModeCopy(){
+  const ritual=getMode()==="ritual";
+  $("#start-label").textContent=ritual?"進入完整儀式":"洗牌並開始";
+  $("#start-hint").textContent=ritual?"理牌・洗牌・切牌・親手選牌":"準備好後，深呼吸三次";
+}
+document.querySelectorAll('input[name="mode"]').forEach(input=>input.addEventListener("change",updateModeCopy));
+shuffleButton.addEventListener("click",startReading);updateModeCopy();$("#year").textContent=new Date().getFullYear();

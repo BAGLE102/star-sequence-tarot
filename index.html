@@ -6,7 +6,7 @@
   <meta name="theme-color" content="#11132a">
   <meta name="description" content="無廣告、無追蹤的塔羅抽牌空間。所有牌卡與解讀都在瀏覽器中完成。">
   <title>星序 Tarot｜安靜的線上塔羅</title>
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=2">
 </head>
 <body>
   <div class="noise" aria-hidden="true"></div>
@@ -47,6 +47,14 @@
           <label class="field-label" for="question">此刻想釐清的是⋯⋯ <span>選填</span></label>
           <textarea id="question" maxlength="120" placeholder="例如：我該如何看待目前的工作轉變？"></textarea>
 
+          <fieldset class="mode-fieldset">
+            <legend>選擇體驗方式</legend>
+            <div class="mode-options">
+              <label><input type="radio" name="mode" value="quick" checked><span><b>快速翻牌</b><small>洗牌後直接翻開結果</small></span></label>
+              <label><input type="radio" name="mode" value="ritual"><span><b>完整儀式</b><small>理牌・洗牌・切牌・親手選牌</small></span></label>
+            </div>
+          </fieldset>
+
           <fieldset>
             <legend>選擇牌陣</legend>
             <div class="spread-options">
@@ -54,6 +62,11 @@
               <label><input type="radio" name="spread" value="three" checked><span><b>時間之流</b><small>過去・現在・未來</small></span></label>
               <label><input type="radio" name="spread" value="five"><span><b>五張洞察</b><small>處境・阻礙・資源・行動・趨勢</small></span></label>
               <label><input type="radio" name="spread" value="relationship"><span><b>關係之鏡</b><small>你・對方・連結・課題・方向</small></span></label>
+              <label><input type="radio" name="spread" value="two"><span><b>兩張對話</b><small>現況・回應</small></span></label>
+              <label><input type="radio" name="spread" value="mindbody"><span><b>身心靈</b><small>身體・內心・靈性</small></span></label>
+              <label><input type="radio" name="spread" value="choice"><span><b>二擇一</b><small>比較兩條路徑</small></span></label>
+              <label><input type="radio" name="spread" value="horseshoe"><span><b>馬蹄鐵</b><small>七張全局洞察</small></span></label>
+              <label><input type="radio" name="spread" value="celtic"><span><b>凱爾特十字</b><small>十張深度解析</small></span></label>
             </div>
           </fieldset>
 
@@ -63,7 +76,7 @@
             <label class="switch-row"><span><b>僅使用正位</b><small>關閉逆位解讀</small></span><input id="upright-only" type="checkbox"><i></i></label>
           </fieldset>
 
-          <button class="shuffle-button" id="shuffle" type="button"><span class="button-star">✦</span><span><b>洗牌並開始</b><small>準備好後，深呼吸三次</small></span></button>
+          <button class="shuffle-button" id="shuffle" type="button"><span class="button-star">✦</span><span><b id="start-label">洗牌並開始</b><small id="start-hint">準備好後，深呼吸三次</small></span></button>
           <p class="privacy-note"><span>●</span> 所有操作只在你的瀏覽器中進行</p>
         </aside>
 
@@ -109,6 +122,6 @@
     <p>© <span id="year"></span> 星序 Tarot · 僅供自我探索與娛樂用途</p>
   </footer>
 
-  <script src="app.js"></script>
+  <script src="app.js?v=2"></script>
 </body>
 </html>
