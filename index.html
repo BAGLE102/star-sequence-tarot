@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#11132a">
+  <meta name="description" content="無廣告、無追蹤的塔羅抽牌空間。所有牌卡與解讀都在瀏覽器中完成。">
+  <title>星序 Tarot｜安靜的線上塔羅</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="noise" aria-hidden="true"></div>
+  <header class="site-header">
+    <a class="brand" href="#top" aria-label="星序首頁">
+      <span class="brand-mark">✦</span>
+      <span>星序 <i>TAROT</i></span>
+    </a>
+    <nav aria-label="主要導覽">
+      <a href="#reading">開始占卜</a>
+      <a href="#guide">使用方式</a>
+      <a href="#about">關於本站</a>
+    </nav>
+  </header>
+
+  <main id="top">
+    <section class="hero">
+      <div class="orbit orbit-one" aria-hidden="true"></div>
+      <div class="orbit orbit-two" aria-hidden="true"></div>
+      <p class="eyebrow">A QUIET PLACE FOR INNER CLARITY</p>
+      <h1>答案不在牌裡，<br><em>而在你看見的那一刻。</em></h1>
+      <p class="hero-copy">沒有廣告，沒有追蹤。留一點安靜的時間，讓 78 張經典塔羅成為你整理思緒的鏡子。</p>
+      <a class="hero-cta" href="#reading">開始一次占卜 <span>↓</span></a>
+      <div class="hero-card fan-a" aria-hidden="true"><span>☼</span></div>
+      <div class="hero-card fan-b" aria-hidden="true"><span>☽</span></div>
+      <div class="hero-card fan-c" aria-hidden="true"><span>✦</span></div>
+    </section>
+
+    <section class="reading" id="reading">
+      <div class="section-heading">
+        <p class="eyebrow">YOUR READING</p>
+        <h2>把問題輕輕放在心上</h2>
+        <p>塔羅適合協助你看見不同角度，不替你做決定，也不取代專業建議。</p>
+      </div>
+
+      <div class="reading-shell">
+        <aside class="control-panel" aria-label="占卜設定">
+          <label class="field-label" for="question">此刻想釐清的是⋯⋯ <span>選填</span></label>
+          <textarea id="question" maxlength="120" placeholder="例如：我該如何看待目前的工作轉變？"></textarea>
+
+          <fieldset>
+            <legend>選擇牌陣</legend>
+            <div class="spread-options">
+              <label><input type="radio" name="spread" value="one"><span><b>一張指引</b><small>當下的核心訊息</small></span></label>
+              <label><input type="radio" name="spread" value="three" checked><span><b>時間之流</b><small>過去・現在・未來</small></span></label>
+              <label><input type="radio" name="spread" value="five"><span><b>五張洞察</b><small>處境・阻礙・資源・行動・趨勢</small></span></label>
+              <label><input type="radio" name="spread" value="relationship"><span><b>關係之鏡</b><small>你・對方・連結・課題・方向</small></span></label>
+            </div>
+          </fieldset>
+
+          <fieldset>
+            <legend>牌組設定</legend>
+            <label class="switch-row"><span><b>僅使用大阿爾克納</b><small>聚焦人生主題與重要轉折</small></span><input id="major-only" type="checkbox"><i></i></label>
+            <label class="switch-row"><span><b>僅使用正位</b><small>關閉逆位解讀</small></span><input id="upright-only" type="checkbox"><i></i></label>
+          </fieldset>
+
+          <button class="shuffle-button" id="shuffle" type="button"><span class="button-star">✦</span><span><b>洗牌並開始</b><small>準備好後，深呼吸三次</small></span></button>
+          <p class="privacy-note"><span>●</span> 所有操作只在你的瀏覽器中進行</p>
+        </aside>
+
+        <div class="table-panel" id="table-panel">
+          <div class="table-intro" id="table-intro">
+            <div class="deck-illustration" aria-hidden="true">
+              <div class="mini-card mini-one"></div><div class="mini-card mini-two"></div><div class="mini-card mini-three">✦</div>
+            </div>
+            <p class="table-kicker">THE DECK IS WAITING</p>
+            <h3>選好牌陣，讓心慢下來</h3>
+            <p>按下「洗牌並開始」後，依序點選牌背翻開你的牌。</p>
+          </div>
+          <div class="draw-area" id="draw-area" aria-live="polite"></div>
+        </div>
+      </div>
+    </section>
+
+    <section class="guide" id="guide">
+      <div class="section-heading light">
+        <p class="eyebrow">A SMALL RITUAL</p>
+        <h2>三個簡單步驟</h2>
+      </div>
+      <div class="guide-grid">
+        <article><span>01</span><i>◌</i><h3>整理問題</h3><p>把焦點放在自己能理解或行動的部分，開放式問題通常比「會不會」更有幫助。</p></article>
+        <article><span>02</span><i>⌁</i><h3>洗牌抽取</h3><p>深呼吸，想著你的問題。牌的位置會由瀏覽器安全地隨機選出。</p></article>
+        <article><span>03</span><i>✦</i><h3>閱讀與回應</h3><p>先留意第一個感受，再閱讀牌義。把能回應當下的線索帶走就好。</p></article>
+      </div>
+    </section>
+
+    <section class="about" id="about">
+      <p class="eyebrow">ABOUT THIS SPACE</p>
+      <h2>為專注而設計，<br>也為你的隱私留白。</h2>
+      <div class="about-copy">
+        <p>本站無廣告、無分析追蹤、無帳號系統。牌卡圖片直接隨網站載入，不連接來路不明的第三方服務。</p>
+        <p>塔羅解讀屬於自我探索與娛樂用途。健康、法律、財務與安全相關問題，請尋求合格專業人士協助。</p>
+      </div>
+    </section>
+  </main>
+
+  <footer>
+    <a class="brand" href="#top"><span class="brand-mark">✦</span><span>星序 <i>TAROT</i></span></a>
+    <p>Rider–Waite–Smith 牌卡原作：Pamela Colman Smith（1909），CC0 影像由 luciellaes 整理。</p>
+    <p>© <span id="year"></span> 星序 Tarot · 僅供自我探索與娛樂用途</p>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

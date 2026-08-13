@@ -1,31 +1,34 @@
-Exit code: 0
-Wall time: 0.3 seconds
-Output:
-# ?? Tarot
+# 星序 Tarot
 
-銝?撱???餈質馱??湔?函蔡??GitHub Pages ??擃葉??蝢?雯蝡?
+一個無廣告、無追蹤、可直接部署到 GitHub Pages 的繁體中文塔羅抽牌網站。
+
 [![Deploy GitHub Pages](https://github.com/BAGLE102/star-sequence-tarot/actions/workflows/pages.yml/badge.svg)](https://github.com/BAGLE102/star-sequence-tarot/actions/workflows/pages.yml)
 
-**蝺?蝬脩?嚗?https://bagle102.github.io/star-sequence-tarot/>**
+**線上網站：<https://bagle102.github.io/star-sequence-tarot/>**
 
-## ?
+## 功能
 
-- 78 撘?Rider?aite?mith 摰??
-- 銝撘萸?撘菔??拍車鈭撐?
-- ?之?輻????甇??閮剖?
-- 雿輻?汗??`crypto.getRandomValues()` 瘣?
-- 摰??嚗???蝡胯ookie????蝚砌??寧?撘Ⅳ
-- ???像?輯?獢?踵?撘???
-## GitHub Pages ?函蔡
+- 78 張 Rider–Waite–Smith 完整牌組
+- 一張、三張與兩種五張牌陣
+- 僅大阿爾克納、僅正位設定
+- 使用瀏覽器 `crypto.getRandomValues()` 洗牌
+- 完全靜態，沒有後端、Cookie、分析或第三方程式碼
+- 手機、平板與桌面響應式版面
 
-repository ?批 `.github/workflows/pages.yml`?? `main` 敺??? GitHub Actions ?芸??函蔡嚗??撱箇蔭撌亙?撩???
-銋隞亦?仿???`index.html` ?冽璈?閬賬?
-## ??靘???甈?
-??∠ Pamela Colman Smith ??1909 撟?Rider?aite?mith Tarot ?蝜芾ˊ???詨??撠?雿輻 [luciellaes ?渡???CC0 敶抵??](https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0)嚗???[yunruse/tarot](https://github.com/yunruse/tarot) 撠???嚗??漲隞?CC0 ???
-????函???誑???祈?雿????箔???敺?70 撟湔??渡??撅砍?雿?嗡??豢?蝞∟???澆????剁?隞??芾?蝣箄??嗅瘜??雯蝡?銝剜??剛圾霈?箸撠??????
-## ?芾?
+## GitHub Pages 部署
 
-- 蝬脩??迂??摮?`index.html`
-- ?脣蔗???ｇ?`styles.css` ?銝??CSS 霈
-- ?儔?????`app.js`
+repository 內含 `.github/workflows/pages.yml`。推送到 `main` 後會透過 GitHub Actions 自動部署，不需建置工具或伺服器。
 
+也可以直接雙擊 `index.html` 在本機預覽。
+
+## 圖像來源與授權
+
+牌面採用 Pamela Colman Smith 為 1909 年 Rider–Waite–Smith Tarot 所繪製的經典圖像。本專案使用 [luciellaes 整理的 CC0 彩色牌組](https://luciellaes.itch.io/rider-waite-smith-tarot-cards-cc0)，經由 [yunruse/tarot](https://github.com/yunruse/tarot) 專案取得；後者亦以 CC0 釋出。
+
+原始牌面在美國、英國以及一般著作權期限為作者逝世後 70 年或更短的地區屬公版。若你在其他司法管轄區發布或商用，仍應自行確認當地法規。網站的中文短解讀為本專案原創文字。
+
+## 自訂
+
+- 網站名稱與文字：`index.html`
+- 色彩與版面：`styles.css` 最上方的 CSS 變數
+- 牌義與牌陣：`app.js`
