@@ -145,9 +145,15 @@ function bindFanNavigation(){
   };
   const move=direction=>fan.scrollBy({left:direction*page(),behavior:"smooth"});
   previous.addEventListener("click",()=>move(-1));next.addEventListener("click",()=>move(1));
-  fan.addEventListener("pointerdown",event=>{if(event.target.closest(".fan-card")?.disabled)return;dragging=true;moved=false;startX=event.clientX;startScroll=fan.scrollLeft;fan.classList.add("is-dragging");fan.setPointerCapture?.(event.pointerId)});
-  fan.addEventListener("pointermove",event=>{if(!dragging)return;const distance=event.clientX-startX;if(Math.abs(distance)>5)moved=true;fan.scrollLeft=startScroll-distance});
-  fan.addEventListener("pointerup",event=>{dragging=false;fan.classList.remove("is-dragging");fan.releasePointerCapture?.(event.pointerId)});
+  fan.addEventListener("pointerdown",event=>{dragging=true;moved=false;startX=event.clientX;startScroll=fan.scrollLeft});
+  fan.addEventListener("pointermove",event=>{
+    if(!dragging)return;
+    const distance=event.clientX-startX;
+    if(Math.abs(distance)>8&&!moved){moved=true;fan.classList.add("is-dragging");fan.setPointerCapture?.(event.pointerId)}
+    if(moved)fan.scrollLeft=startScroll-distance;
+  });
+  const endDrag=event=>{dragging=false;fan.classList.remove("is-dragging");if(fan.hasPointerCapture?.(event.pointerId))fan.releasePointerCapture(event.pointerId)};
+  fan.addEventListener("pointerup",endDrag);fan.addEventListener("pointercancel",endDrag);
   fan.addEventListener("click",event=>{if(moved){event.preventDefault();event.stopPropagation();moved=false}},true);
   fan.addEventListener("wheel",event=>{if(Math.abs(event.deltaY)>Math.abs(event.deltaX)){event.preventDefault();fan.scrollLeft+=event.deltaY}},{passive:false});
   fan.addEventListener("keydown",event=>{if(event.key==="ArrowLeft"){event.preventDefault();move(-1)}if(event.key==="ArrowRight"){event.preventDefault();move(1)}});
