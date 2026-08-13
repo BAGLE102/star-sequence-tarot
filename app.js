@@ -89,14 +89,12 @@ function renderRitualStage(stage){
     bindManualShuffleTable();
   }
   if(stage==="cut"){
-    drawArea.innerHTML=`${header}${ritualSteps("切牌")}<div class="manual-cut"><div class="cut-heading"><p class="table-kicker">CUT THE DECK</p><h3>選一張牌，從那裡開始切</h3><p>左右移動牌列，憑直覺點選一張牌背；該位置會成為新牌序的起點。</p></div><div class="fan-viewport cut-fan-viewport"><button type="button" class="fan-nav fan-prev" aria-label="查看前一組切牌位置">‹</button><div class="card-fan cut-card-fan" id="card-fan" role="group" tabindex="0" aria-label="可左右拖曳的切牌牌列">${ritualDeck.map((card,i)=>`<button class="fan-card cut-fan-card" data-cut-index="${i}" aria-label="從第 ${i+1} 張牌的位置切牌"><span>✦</span></button>`).join("")}</div><button type="button" class="fan-nav fan-next" aria-label="查看後一組切牌位置">›</button></div><div class="fan-meter cut-meter" aria-live="polite"><span id="fan-range">瀏覽位置 1 / ${ritualDeck.length}</span><i><b id="fan-progress"></b></i></div><p class="cut-choice" id="cut-choice">尚未選擇切牌位置</p></div>`;
+    drawArea.innerHTML=`${header}${ritualSteps("切牌")}<div class="manual-cut"><div class="cut-heading"><p class="table-kicker">CUT THE DECK</p><h3>選一張牌，從那裡開始切</h3><p>${ritualDeck.length} 張牌全部展開如下。憑直覺點選一張牌背，該位置會成為新牌序的起點。</p></div><div class="all-card-grid cut-all-grid" role="group" aria-label="全部切牌位置">${ritualDeck.map((card,i)=>`<button class="all-card cut-grid-card" data-cut-index="${i}" aria-label="從第 ${i+1} 張牌的位置切牌"><span>✦</span><small>${i+1}</small></button>`).join("")}</div><p class="cut-choice" id="cut-choice">請從上方全部牌中選擇切牌位置</p></div>`;
     drawArea.querySelectorAll("[data-cut-index]").forEach(button=>button.addEventListener("click",()=>cutRitualDeckAtIndex(Number(button.dataset.cutIndex),button)));
-    bindFanNavigation();
   }
   if(stage==="select"){
-    drawArea.innerHTML=`${header}${ritualSteps("選牌")}<div class="selection-head"><div><p class="table-kicker">CHOOSE YOUR CARDS</p><h3>一張一張，選出你的牌</h3></div><strong id="selected-count">0 / ${ritualPositions.length}</strong></div><p class="fan-hint">拖曳牌列、滑動觸控螢幕或使用左右按鈕；選中的牌會依序對應牌位。</p><div class="selected-tray" id="selected-tray">${ritualPositions.map((p,i)=>`<div><span>${i+1}</span><small>${p}</small></div>`).join("")}</div><div class="fan-viewport"><button type="button" class="fan-nav fan-prev" aria-label="查看前一組牌">‹</button><div class="card-fan" id="card-fan" role="group" tabindex="0" aria-label="可左右拖曳的塔羅牌扇">${ritualDeck.map((card,i)=>`<button class="fan-card" data-card-index="${i}" aria-label="選擇第 ${i+1} 張牌"><span>✦</span></button>`).join("")}</div><button type="button" class="fan-nav fan-next" aria-label="查看後一組牌">›</button></div><div class="fan-meter" aria-live="polite"><span id="fan-range">瀏覽位置 1 / ${ritualDeck.length}</span><i><b id="fan-progress"></b></i></div><div class="draw-actions"><button type="button" id="finish-selection" disabled>完成抽牌，開始翻牌</button></div>`;
-    drawArea.querySelectorAll(".fan-card").forEach(button=>button.addEventListener("click",()=>chooseRitualCard(button)));
-    bindFanNavigation();
+    drawArea.innerHTML=`${header}${ritualSteps("選牌")}<div class="selection-head"><div><p class="table-kicker">CHOOSE YOUR CARDS</p><h3>一張一張，選出你的牌</h3></div><strong id="selected-count">0 / ${ritualPositions.length}</strong></div><p class="fan-hint">${ritualDeck.length} 張牌全部展開如下；選中的牌會依序對應牌位。</p><div class="selected-tray" id="selected-tray">${ritualPositions.map((p,i)=>`<div><span>${i+1}</span><small>${p}</small></div>`).join("")}</div><div class="all-card-grid select-all-grid" role="group" aria-label="全部可選塔羅牌">${ritualDeck.map((card,i)=>`<button class="all-card select-grid-card" data-card-index="${i}" aria-label="選擇第 ${i+1} 張牌"><span>✦</span><small>${i+1}</small></button>`).join("")}</div><div class="draw-actions"><button type="button" id="finish-selection" disabled>完成抽牌，開始翻牌</button></div>`;
+    drawArea.querySelectorAll("[data-card-index]").forEach(button=>button.addEventListener("click",()=>chooseRitualCard(button)));
   }
   drawArea.querySelectorAll("[data-ritual]").forEach(button=>button.addEventListener("click",()=>handleRitualAction(button.dataset.ritual)));
 }
@@ -141,7 +139,7 @@ function bindManualShuffleTable(){
 function finishManualShuffle(){manualGatherCards?.();setTimeout(()=>renderRitualStage("cut"),620)}
 
 function cutRitualDeckAtIndex(index,button){
-  drawArea.querySelectorAll(".cut-fan-card").forEach(card=>card.disabled=true);button.classList.add("selected","cut-chosen");
+  drawArea.querySelectorAll(".cut-grid-card").forEach(card=>card.disabled=true);button.classList.add("selected","cut-chosen");
   ritualDeck=[...ritualDeck.slice(index),...ritualDeck.slice(0,index)];
   const choice=$("#cut-choice");if(choice)choice.textContent=`已選擇第 ${index+1} 張牌，正在重新整理牌序⋯`;
   haptic([12,24,18]);setTimeout(()=>renderRitualStage("select"),760);
@@ -182,7 +180,7 @@ function chooseRitualCard(button){
   const bit=new Uint32Array(1);crypto.getRandomValues(bit);
   const reversed=!$("#upright-only").checked&&bit[0]%2===1;
   ritualSelected.push({...card,reversed,position:ritualPositions[ritualSelected.length]});
-  button.disabled=true;button.classList.add("selected");button.innerHTML=`<b>${ritualSelected.length}</b><span>✦</span>`;haptic(15);
+  button.disabled=true;button.classList.add("selected");button.innerHTML=`<b>${ritualSelected.length}</b><span>✦</span><small>${index+1}</small>`;haptic(15);
   const count=$("#selected-count");if(count)count.textContent=`${ritualSelected.length} / ${ritualPositions.length}`;
   const tray=$("#selected-tray");const slot=tray?.children[ritualSelected.length-1];slot?.classList.add("filled");
   if(slot)slot.querySelector("span").textContent="✦";
