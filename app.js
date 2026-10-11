@@ -190,12 +190,95 @@ function chooseRitualCard(button){
 function renderDraw(){
   tableIntro.hidden=true;drawArea.classList.add("active");
   const question=$("#question").value.trim();
-  drawArea.innerHTML=`<div class="draw-header"><div class="question-display">${question?`「${escapeHtml(question)}」`:"你此刻需要看見的訊息"}</div><p>依照直覺，逐張點擊牌背翻開</p></div><div class="cards-grid">${currentDraw.map((c,i)=>`<div class="card-slot"><p class="card-position">${c.position}</p><div class="tarot-card" role="button" tabindex="0" aria-label="翻開第 ${i+1} 張牌" data-index="${i}"><div class="card-inner"><div class="card-face card-back"></div><div class="card-face card-front ${c.reversed?"reversed":""}"><img src="${c.image}" alt="${c.name}${c.reversed?"逆位":"正位"}"></div></div></div><div class="card-summary"><h4>${c.name}</h4><span class="orientation">${c.reversed?"逆位":"正位"}</span><p>${c.reversed?c.rev:c.up}</p></div></div>`).join("")}</div><div class="draw-actions"><button type="button" id="reveal-all">全部翻開</button></div>`;
+  drawArea.innerHTML=`<div class="draw-header"><div class="question-display">${question?`「${escapeHtml(question)}」`:"你此刻需要看見的訊息"}</div><p>依照直覺，逐張點擊牌背翻開</p></div><div class="cards-grid">${currentDraw.map((c,i)=>`<div class="card-slot"><p class="card-position">${c.position}</p><div class="tarot-card" role="button" tabindex="0" aria-label="翻開第 ${i+1} 張牌" data-index="${i}"><div class="card-inner"><div class="card-face card-back"></div><div class="card-face card-front ${c.reversed?"reversed":""}"><img src="${c.image}" alt="${c.name}${c.reversed?"逆位":"正位"}"></div></div></div><div class="card-summary"><h4>${c.name}</h4><span class="orientation">${c.reversed?"逆位":"正位"}</span><p>${c.reversed?c.rev:c.up}</p></div></div>`).join("")}</div><div class="draw-actions"><button type="button" id="reveal-all">全部翻開</button></div><div class="result-share" id="result-share" hidden><div><p class="table-kicker">KEEP THIS READING</p><h3>把此刻看見的訊息帶走</h3><p>結果圖片包含問題、牌位、正逆位與牌義，方便保存或分享。</p></div><div class="share-buttons"><button type="button" id="download-result">下載結果圖片</button><button type="button" id="copy-result">複製結果圖片</button></div><p class="share-status" id="share-status" role="status"></p></div>`;
   drawArea.querySelectorAll(".tarot-card").forEach(el=>{el.addEventListener("click",()=>reveal(el));el.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();reveal(el)}})});
   $("#reveal-all").addEventListener("click",()=>drawArea.querySelectorAll(".tarot-card").forEach((el,i)=>setTimeout(()=>reveal(el),i*170)));
+  $("#download-result").addEventListener("click",downloadResultImage);
+  $("#copy-result").addEventListener("click",copyResultImage);
   if(innerWidth<900)tablePanel.scrollIntoView({behavior:"smooth",block:"start"});
 }
-function reveal(el){if(el.classList.contains("revealed"))return;el.classList.add("revealed");el.setAttribute("aria-label",`${currentDraw[+el.dataset.index].name}，${currentDraw[+el.dataset.index].reversed?"逆位":"正位"}`)}
+function reveal(el){
+  if(el.classList.contains("revealed"))return;
+  el.classList.add("revealed");
+  el.setAttribute("aria-label",`${currentDraw[+el.dataset.index].name}，${currentDraw[+el.dataset.index].reversed?"逆位":"正位"}`);
+  if(drawArea.querySelectorAll(".tarot-card.revealed").length===currentDraw.length){
+    const share=$("#result-share"),revealAll=$("#reveal-all");
+    if(share){share.hidden=false;setTimeout(()=>share.classList.add("visible"),20)}
+    if(revealAll){revealAll.textContent="牌面已全部翻開";revealAll.disabled=true}
+  }
+}
+
+function canvasRoundRect(ctx,x,y,width,height,radius){
+  const r=Math.min(radius,width/2,height/2);
+  ctx.beginPath();ctx.moveTo(x+r,y);ctx.arcTo(x+width,y,x+width,y+height,r);ctx.arcTo(x+width,y+height,x,y+height,r);ctx.arcTo(x,y+height,x,y,r);ctx.arcTo(x,y,x+width,y,r);ctx.closePath();
+}
+
+function wrapCanvasText(ctx,text,x,y,maxWidth,lineHeight,maxLines=3,align="left"){
+  const chars=[...text];let line="",drawn=0;ctx.textAlign=align;
+  for(let i=0;i<chars.length;i++){
+    const test=line+chars[i];
+    if(ctx.measureText(test).width>maxWidth&&line){
+      ctx.fillText(line,x,y+drawn*lineHeight);drawn++;line=chars[i];
+      if(drawn===maxLines)return y+drawn*lineHeight;
+    }else line=test;
+  }
+  if(line&&drawn<maxLines){ctx.fillText(line,x,y+drawn*lineHeight);drawn++}
+  return y+drawn*lineHeight;
+}
+
+function loadCardImage(src){
+  return new Promise((resolve,reject)=>{const image=new Image();image.onload=()=>resolve(image);image.onerror=reject;image.src=src});
+}
+
+async function buildResultCanvas(){
+  const count=currentDraw.length,columns=count===1?1:count===2?2:count<=5?count:count<=8?4:5;
+  const rows=Math.ceil(count/columns),cardWidth=count<=3?220:count<=5?174:148,cardHeight=Math.round(cardWidth/.58),cellWidth=210,cellHeight=cardHeight+174;
+  const canvas=document.createElement("canvas");canvas.width=1200;canvas.height=360+rows*cellHeight+125;
+  const ctx=canvas.getContext("2d"),images=await Promise.all(currentDraw.map(card=>loadCardImage(card.image)));
+  const bg=ctx.createLinearGradient(0,0,1200,canvas.height);bg.addColorStop(0,"#101226");bg.addColorStop(.55,"#1b1d38");bg.addColorStop(1,"#111329");ctx.fillStyle=bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+  for(let i=0;i<95;i++){const x=(i*193)%1200,y=(i*i*47+83)%canvas.height,r=i%9===0?2:1;ctx.fillStyle=i%5===0?"rgba(225,201,130,.38)":"rgba(255,255,255,.16)";ctx.beginPath();ctx.arc(x,y,r,0,Math.PI*2);ctx.fill()}
+  ctx.strokeStyle="rgba(225,201,130,.45)";ctx.lineWidth=2;ctx.strokeRect(45,45,1110,canvas.height-90);ctx.strokeStyle="rgba(225,201,130,.13)";ctx.strokeRect(58,58,1084,canvas.height-116);
+  ctx.fillStyle="#e1c982";ctx.font="34px Georgia, 'Microsoft JhengHei', serif";ctx.fillText("✦  星序",86,116);ctx.fillStyle="#8f8ca1";ctx.font="16px Arial, sans-serif";ctx.fillText("TAROT READING",86,148);
+  ctx.textAlign="right";ctx.fillStyle="#9b97a8";ctx.font="17px 'Microsoft JhengHei', sans-serif";ctx.fillText(new Intl.DateTimeFormat("zh-Hant-TW",{dateStyle:"long"}).format(new Date()),1112,116);
+  const question=currentQuestion()||"你此刻需要看見的訊息";ctx.fillStyle="#f2ecdf";ctx.font="32px 'Microsoft JhengHei', serif";wrapCanvasText(ctx,`「${question}」`,86,220,1028,48,2,"left");
+  ctx.strokeStyle="rgba(225,201,130,.22)";ctx.beginPath();ctx.moveTo(86,292);ctx.lineTo(1114,292);ctx.stroke();
+  currentDraw.forEach((card,index)=>{
+    const row=Math.floor(index/columns),itemsInRow=Math.min(columns,count-row*columns),rowWidth=itemsInRow*cellWidth;
+    const x=600-rowWidth/2+(index%columns)*cellWidth+(cellWidth-cardWidth)/2,y=340+row*cellHeight;
+    ctx.textAlign="center";ctx.fillStyle="#c7b476";ctx.font="17px 'Microsoft JhengHei', serif";ctx.fillText(card.position,x+cardWidth/2,y-22);
+    ctx.save();ctx.shadowColor="rgba(0,0,0,.55)";ctx.shadowBlur=22;ctx.shadowOffsetY=12;canvasRoundRect(ctx,x,y,cardWidth,cardHeight,7);ctx.clip();
+    if(card.reversed){ctx.translate(x+cardWidth/2,y+cardHeight/2);ctx.rotate(Math.PI);ctx.drawImage(images[index],-cardWidth/2,-cardHeight/2,cardWidth,cardHeight)}else ctx.drawImage(images[index],x,y,cardWidth,cardHeight);
+    ctx.restore();ctx.strokeStyle="#d7bd78";ctx.lineWidth=3;canvasRoundRect(ctx,x,y,cardWidth,cardHeight,7);ctx.stroke();
+    ctx.fillStyle="#f2ecdf";ctx.font="bold 19px 'Microsoft JhengHei', serif";ctx.fillText(card.name,x+cardWidth/2,y+cardHeight+34);
+    ctx.fillStyle=card.reversed?"#d99b9b":"#d6c17f";ctx.font="14px 'Microsoft JhengHei', sans-serif";ctx.fillText(card.reversed?"逆位":"正位",x+cardWidth/2,y+cardHeight+60);
+    ctx.fillStyle="#b8b4c1";ctx.font="15px 'Microsoft JhengHei', serif";wrapCanvasText(ctx,card.reversed?card.rev:card.up,x+cardWidth/2,y+cardHeight+90,cardWidth+32,24,3,"center");
+  });
+  ctx.textAlign="left";ctx.fillStyle="#777486";ctx.font="15px 'Microsoft JhengHei', sans-serif";ctx.fillText("星序 Tarot · 僅供自我探索與娛樂用途",86,canvas.height-78);
+  ctx.textAlign="right";ctx.fillText("答案不在牌裡，而在你看見的那一刻。",1114,canvas.height-78);ctx.textAlign="left";
+  return canvas;
+}
+
+function canvasToBlob(canvas){return new Promise((resolve,reject)=>canvas.toBlob(blob=>blob?resolve(blob):reject(new Error("無法建立圖片")),"image/png"))}
+
+async function withExportStatus(button,workingText,task){
+  const status=$("#share-status"),original=button.textContent;button.disabled=true;button.textContent=workingText;if(status)status.textContent="";
+  try{await task()}catch(error){if(status)status.textContent="圖片匯出失敗，請稍後再試。";console.error(error)}finally{button.disabled=false;button.textContent=original}
+}
+
+function downloadResultImage(event){
+  withExportStatus(event.currentTarget,"正在製作圖片…",async()=>{
+    const canvas=await buildResultCanvas(),link=document.createElement("a");link.download=`星序塔羅-${new Date().toISOString().slice(0,10)}.png`;link.href=canvas.toDataURL("image/png");link.click();
+    const status=$("#share-status");if(status)status.textContent="結果圖片已下載。";
+  });
+}
+
+function copyResultImage(event){
+  withExportStatus(event.currentTarget,"正在複製圖片…",async()=>{
+    if(!navigator.clipboard?.write||typeof ClipboardItem==="undefined")throw new Error("Clipboard API unavailable");
+    const blob=await canvasToBlob(await buildResultCanvas());await navigator.clipboard.write([new ClipboardItem({"image/png":blob})]);
+    const status=$("#share-status");if(status)status.textContent="結果圖片已複製，可直接貼到訊息或筆記中。";
+  });
+}
 function escapeHtml(s){return s.replace(/[&<>'"]/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;","'":"&#39;",'"':"&quot;"}[ch]))}
 function updateModeCopy(){
   const ritual=getMode()==="ritual";
